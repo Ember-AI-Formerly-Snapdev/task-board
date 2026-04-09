@@ -10,7 +10,7 @@ export interface StructuredDescription {
   user_story: string;
   proposed_behavior: string;
   acceptance_criteria: string;
-  questions_for_gibson: string;
+  open_questions: string;
 }
 
 export interface Task {

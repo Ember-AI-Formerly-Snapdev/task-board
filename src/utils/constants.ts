@@ -6,7 +6,7 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
   { key: "queued", label: "Queued", color: "bg-blue-500", description: "Scheduled for this sprint" },
   { key: "in_progress", label: "In Progress", color: "bg-amber-500", description: "Actively being worked on" },
   { key: "in_testing", label: "In Testing", color: "bg-teal-500", description: "Under QA and validation" },
-  { key: "gibson_review", label: "Gibson Review", color: "bg-purple-500", description: "Live & ready for Gibson review" },
+  { key: "client_review", label: "Client Review", color: "bg-purple-500", description: "Live & ready for client review" },
   { key: "changes_requested", label: "Changes Requested", color: "bg-orange-500", description: "Revisions needed from review" },
   { key: "approved", label: "Approved", color: "bg-green-500", description: "Signed off and complete" },
 ];
@@ -32,7 +32,7 @@ export const DESCRIPTION_SECTIONS: DescriptionSectionConfig[] = [
   { key: "user_story", label: "User Story" },
   { key: "proposed_behavior", label: "Proposed Behavior" },
   { key: "acceptance_criteria", label: "Acceptance Criteria" },
-  { key: "questions_for_gibson", label: "Questions for Gibson" },
+  { key: "open_questions", label: "Open Questions" },
 ];
 
 export const EMPTY_DESCRIPTION: StructuredDescription = {
@@ -40,7 +40,7 @@ export const EMPTY_DESCRIPTION: StructuredDescription = {
   user_story: "",
   proposed_behavior: "",
   acceptance_criteria: "",
-  questions_for_gibson: "",
+  open_questions: "",
 };
 
 export const POSITION_GAP = 1000;
