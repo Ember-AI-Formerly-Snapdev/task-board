@@ -1,16 +1,29 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { Task, TasksByStatus, ColumnTotals, ColumnUnreads, Project } from '../types';
 import { useTaskBoardContext } from '../context/TaskBoardProvider';
-import { DEFAULT_PAGE_SIZE, POSITION_GAP } from '../utils/constants';
-import { getUserProjects } from '../utils/helpers';
+import { DEFAULT_PAGE_SIZE } from '../utils/constants';
 
 export function useTaskBoard() {
   const { service, user, projects: configProjects, columns, config } = useTaskBoardContext();
 
-  const projects = useMemo(
-    () => configProjects.length > 0 ? configProjects : getUserProjects(user.apps, []),
-    [configProjects, user.apps]
-  );
+  const [fetchedProjects, setFetchedProjects] = useState<Project[]>([]);
+
+  // Fetch projects from API when none are provided via props
+  useEffect(() => {
+    if (configProjects.length > 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await service.listProjects();
+        if (!cancelled) setFetchedProjects(data);
+      } catch {
+        // Projects endpoint may not exist — fall back to empty
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [configProjects, service]);
+
+  const projects = configProjects.length > 0 ? configProjects : fetchedProjects;
 
   const [selectedProject, setSelectedProject] = useState("");
   const [tasks, setTasks] = useState<TasksByStatus>({});

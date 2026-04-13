@@ -1,5 +1,6 @@
 import type {
   ApiClient,
+  Project,
   Task,
   TaskDetailResponse,
   ColumnResponse,
@@ -28,6 +29,9 @@ export interface TaskBoardService {
   addComment(taskId: string, data: CreateCommentPayload): Promise<Comment>;
   editComment(taskId: string, commentId: string, data: EditCommentPayload): Promise<Comment>;
   deleteComment(taskId: string, commentId: string): Promise<void>;
+
+  // ─── Projects ───
+  listProjects(): Promise<Project[]>;
 
   // ─── Mentions ───
   searchMentionUsers(query: string): Promise<MentionUser[]>;
@@ -105,6 +109,13 @@ export function createTaskBoardService(
 
     async deleteComment(taskId, commentId) {
       await apiClient.delete(`${basePath}/tasks/${taskId}/comments/${commentId}`);
+    },
+
+    // ─── Projects ───
+
+    async listProjects() {
+      const { data } = await apiClient.get<Project[]>(`${basePath}/projects`);
+      return data;
     },
 
     // ─── Mentions ───
