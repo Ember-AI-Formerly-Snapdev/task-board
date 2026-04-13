@@ -1,5 +1,5 @@
 {
-  "name": "@codewusama/task-board",
+  "name": "@ember-ai-formerly-snapdev/task-board",
   "version": "0.3.0",
   "description": "Reusable Kanban task board component",
   "main": "./dist/index.js",
@@ -43,6 +43,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodeWUsama/task-board.git"
+    "url": "git+https://github.com/Ember-AI-Formerly-Snapdev/task-board.git"
   }
 }

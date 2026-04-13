@@ -1,11 +1,11 @@
-# @codewusama/task-board
+# @ember-ai-formerly-snapdev/task-board
 
 Reusable Kanban task board component with built-in create/detail UI.
 
 ## Installation
 
 ```bash
-npm install @codewusama/task-board
+npm install @ember-ai-formerly-snapdev/task-board
 ```
 
 ## Quick Start
@@ -13,8 +13,8 @@ npm install @codewusama/task-board
 No render props needed. The package ships with a complete UI out of the box:
 
 ```tsx
-import { TaskBoardProvider, TaskBoard } from '@codewusama/task-board';
-import '@codewusama/task-board/styles.css';
+import { TaskBoardProvider, TaskBoard } from '@ember-ai-formerly-snapdev/task-board';
+import '@ember-ai-formerly-snapdev/task-board/styles.css';
 import { apiClient } from './lib/api';
 
 function App() {
@@ -102,7 +102,7 @@ import {
   TaskCard, PriorityBadge, UserAvatar,
   CreateTaskModal, TaskDetailPanel,
   useTaskActions,
-} from '@codewusama/task-board';
+} from '@ember-ai-formerly-snapdev/task-board';
 
 // Use hooks independently
 function MyCustomUI() {
