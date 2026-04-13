@@ -2,7 +2,7 @@
 
 ## Context
 
-We've published a reusable Kanban task board package `@emberai-engg/task-board` on npm. It provides a fully functional task board with drag-and-drop, @mentions, notifications, filtering, infinite scroll, and more. We need to integrate it into this application.
+We've published a reusable Kanban task board package `@emberai-engg/task-board` on npm (public, no auth needed). It provides a fully functional task board with drag-and-drop, @mentions, notifications, filtering, infinite scroll, and more. We need to integrate it into this application.
 
 The package exports a `<TaskBoardProvider>` that accepts the app's API client and user info, and a `<TaskBoard>` component that renders the full board UI.
 
@@ -12,17 +12,17 @@ The backend reference implementation (Python FastAPI) is in the same repo at `gi
 
 ## Step 1: Install the package
 
-Install `@emberai-engg/task-board` from npm. No special registry config needed — it's a public package on npmjs.org.
-
 ```bash
 npm install @emberai-engg/task-board
 ```
+
+No `.npmrc` or registry config needed — it's a public package on npmjs.org.
 
 Verify `node_modules/@emberai-engg/task-board/dist/` contains `index.js`, `index.mjs`, `index.d.ts`, and `styles.css`.
 
 ## Step 2: Set up the backend task board endpoints
 
-The package's frontend expects 16 REST API endpoints. Identify the backend framework used in this app and proceed accordingly.
+The package's frontend expects 16 REST API endpoints plus a projects endpoint. Identify the backend framework and database used in this app and proceed accordingly.
 
 ### 2a: Get the backend reference
 
@@ -43,6 +43,11 @@ Copy the backend reference files into the equivalent locations in this app's bac
 - Auth/tenant dependency to match this app's existing auth approach
 - Database connection to match this app's existing DB setup
 
+**Auth adaptation:** The reference uses JWT-based auth with `get_current_user()` returning a user dict. Adapt this to match however this app authenticates:
+- **JWT auth:** Reuse the reference as-is, adjusting the token decode function
+- **Session/cookie auth:** Read the user from the session or cookie instead of a JWT
+- **No auth / frontend-only auth:** Use a hardcoded user dict or read from a config. The user dict must include: `username`, `name`, `email`, `role`, `apps` (list of project slugs or `["all"]`), `is_internal` (bool), `is_reviewer` (bool)
+
 **Database adaptation:** The reference implementation uses **MongoDB** (via Motor async driver). If this app uses a different database, you MUST rewrite the data access layer to match. The API request/response contracts must stay the same — only the storage layer changes. Here's how to adapt for common databases:
 
 - **PostgreSQL / MySQL (SQLAlchemy):** Replace MongoDB collection calls with SQLAlchemy ORM models and queries. Create tables for `taskboard_tasks`, `taskboard_comments`, `taskboard_activity`, `taskboard_user_reads`, `taskboard_notifications`, and `taskboard_projects`. Use auto-incrementing IDs or UUIDs instead of ObjectId. Replace `insert_one` → `session.add()`, `find` → `session.query()`, `update_one` → `session.execute(update(...))`, `delete_one` → `session.delete()`.
@@ -51,6 +56,8 @@ Copy the backend reference files into the equivalent locations in this app's bac
 - **Firestore:** Map collections 1:1. Use subcollections for comments under tasks if preferred. Replace ObjectId with Firestore auto-IDs.
 - **Prisma ORM:** Define models in `schema.prisma` matching the 6 collections, then use the Prisma client in the route handlers.
 
+**CRITICAL — ID format:** Regardless of database, all IDs returned to the frontend MUST be **strings**. If using integer primary keys, convert them: `"id": str(row.id)`. The frontend passes IDs as strings in all API calls.
+
 The key contract the frontend expects:
 - `GET /tasks` returns `{ [status]: { tasks: [...], total: N, unread: N } }`
 - `GET /tasks/{id}` returns the task with `comments` and `activity` arrays
@@ -58,25 +65,70 @@ The key contract the frontend expects:
 - All dates are ISO 8601 strings
 - The `_serialize_doc` pattern (converting DB-native IDs to string `id` fields) must be replicated in whatever ORM/driver you use
 
-### 2c: Register the task board router
+### 2c: Add a projects endpoint
 
-Register the task board router in the main app file at the `/api/taskboard` prefix.
+The reference implementation does not include a projects list endpoint, but the frontend needs one to populate the project selector. Add a `GET /api/v1/taskboard/projects` endpoint that returns the list of projects the current user has access to:
 
-### 2d: Set up the database
+```json
+[
+  { "slug": "my-project", "name": "My Project", "description": "..." }
+]
+```
+
+Filter by the user's `apps` list (or return all if `apps` contains `"all"`).
+
+### 2d: Register the task board router
+
+Register the task board router in the main app file at the `/api/v1/taskboard` prefix.
+
+### 2e: Set up the database and seed
 
 The task board needs 6 tables/collections: `taskboard_tasks`, `taskboard_comments`, `taskboard_activity`, `taskboard_user_reads`, `taskboard_notifications`, and `taskboard_projects`. See `backend-reference/README.md` for the full schema and recommended indexes.
 
 If using a relational database (PostgreSQL, MySQL), create a migration with the appropriate tables and columns. If using a document database (MongoDB, Firestore), the collections are created automatically on first write.
 
-Run the seed script or manually create the initial project. Name the project based on what this app does.
+**Seed the initial project:** Either run the seed script or wire it into the app's startup so the project is auto-created if it doesn't exist. Name the project based on what this app does. The seed should be idempotent (skip if the project already exists).
 
-### 2e: Verify the backend
+### 2f: Verify the backend
 
-Start the backend and test the projects, columns, and tasks endpoints to make sure they return data correctly.
+Start the backend and test these endpoints to make sure they return data correctly:
+- `GET /api/v1/taskboard/projects` — should return the seeded project
+- `GET /api/v1/taskboard/tasks?project_slug=<slug>&per_column=10` — should return the column structure
 
 ## Step 3: Integrate the frontend
 
-### 3a: Import the CSS and configure Tailwind
+### 3a: Create the API client wrapper
+
+The package expects an `ApiClient` interface with `get`, `post`, `patch`, and `delete` methods that return `{ data: T }`. If this app uses Axios, pass it directly — it already matches. If this app uses `fetch` or another HTTP library, create a thin wrapper:
+
+```typescript
+const apiClient = {
+  get: async <T>(url: string) => {
+    const res = await fetch(url);
+    const data = await res.json();
+    return { data: data as T };
+  },
+  post: async <T>(url: string, body?: unknown) => {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    const data = await res.json();
+    return { data: data as T };
+  },
+  patch: async <T>(url: string, body?: unknown) => {
+    const res = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    const data = await res.json();
+    return { data: data as T };
+  },
+  delete: async <T>(url: string) => {
+    const res = await fetch(url, { method: 'DELETE' });
+    const data = await res.json().catch(() => ({}));
+    return { data: data as T };
+  },
+};
+```
+
+Make sure auth headers (cookies, tokens, etc.) are included. If the app uses `credentials: 'include'` for cookies, add that to every fetch call.
+
+### 3b: Import the CSS and configure Tailwind
 
 Import `@emberai-engg/task-board/styles.css` in the app's global CSS or root layout.
 
@@ -87,11 +139,11 @@ Import `@emberai-engg/task-board/styles.css` in the app's global CSS or root lay
 
 Without this step, the board will render but all styling will be broken.
 
-### 3b: Create the task board page
+### 3c: Create the task board page
 
 Create a new page at `/task-board`. The page should:
 
-- Wrap everything in `<TaskBoardProvider>` passing in the app's existing API client (with auth headers already configured) and the current logged-in user's info
+- Wrap everything in `<TaskBoardProvider>` passing in the API client wrapper (with auth headers already configured) and the current logged-in user's info
 - Render `<TaskBoard>` inside the provider
 - Set up feature flags (drag-and-drop, comments, filters enabled; attachments disabled for now)
 - Pass an `onError` callback for error visibility
@@ -103,7 +155,7 @@ If this app needs custom create/edit UI, render props (`renderCreateTask`, `rend
 
 Optionally, pass `onShareFeedback` callback to enable the Share Feedback button in the board header.
 
-### 3c: Add navigation link
+### 3d: Add navigation link
 
 Add a "Task Board" link to the app's sidebar or navigation using the `KanbanIcon` exported from the package. Match the existing nav pattern.
 
@@ -127,6 +179,6 @@ Start both backend and frontend dev servers, navigate to `/task-board`, and veri
 
 - The package does NOT handle authentication. The API client you pass in should already have auth headers configured.
 - The package uses Tailwind utility classes and relies on the consuming app's Tailwind setup. It does not bundle Tailwind.
-- If the backend endpoints are at a different prefix than `/api/taskboard`, pass the correct `apiBasePath` prop to TaskBoardProvider.
+- If the backend endpoints are at a different prefix than `/api/v1/taskboard`, pass the correct `apiBasePath` prop to TaskBoardProvider.
 - Do NOT modify the package code in node_modules. If something doesn't work, we fix it in the package repo and publish a new version.
 - Do NOT reference any local folders or paths outside this project. Everything comes from the npm package or the GitHub repo.
