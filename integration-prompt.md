@@ -1,8 +1,8 @@
-# Claude Code Prompt: Integrate @ember-ai-formerly-snapdev/task-board
+# Claude Code Prompt: Integrate @emberai-engg/task-board
 
 ## Context
 
-We've published a reusable Kanban task board package `@ember-ai-formerly-snapdev/task-board` on GitHub Packages. It provides a fully functional task board with drag-and-drop, @mentions, notifications, filtering, infinite scroll, and more. We need to integrate it into this application.
+We've published a reusable Kanban task board package `@emberai-engg/task-board` on npm. It provides a fully functional task board with drag-and-drop, @mentions, notifications, filtering, infinite scroll, and more. We need to integrate it into this application.
 
 The package exports a `<TaskBoardProvider>` that accepts the app's API client and user info, and a `<TaskBoard>` component that renders the full board UI.
 
@@ -10,19 +10,21 @@ The backend reference implementation (Python FastAPI) is in the same repo at `gi
 
 ---
 
-## Step 1: Configure npm to pull from GitHub Packages
+## Step 1: Install the package
 
-Create or update `.npmrc` in the project root to point the `@ember-ai-formerly-snapdev` scope at GitHub Packages. The `GITHUB_TOKEN` env var needs `read:packages` scope.
+Install `@emberai-engg/task-board` from npm. No special registry config needed — it's a public package on npmjs.org.
 
-## Step 2: Install the package
+```bash
+npm install @emberai-engg/task-board
+```
 
-Install `@ember-ai-formerly-snapdev/task-board` from the registry and verify the `dist/` folder contains `index.js`, `index.mjs`, `index.d.ts`, and `styles.css`.
+Verify `node_modules/@emberai-engg/task-board/dist/` contains `index.js`, `index.mjs`, `index.d.ts`, and `styles.css`.
 
-## Step 3: Set up the backend task board endpoints
+## Step 2: Set up the backend task board endpoints
 
 The package's frontend expects 16 REST API endpoints. Identify the backend framework used in this app and proceed accordingly.
 
-### 3a: Get the backend reference
+### 2a: Get the backend reference
 
 Clone or fetch the reference implementation from `https://github.com/Ember-AI-Formerly-Snapdev/task-board`. The backend code is in the `backend-reference/` folder. It contains:
 
@@ -33,7 +35,7 @@ Clone or fetch the reference implementation from `https://github.com/Ember-AI-Fo
 
 Read `backend-reference/README.md` for full details on each file and what needs adapting.
 
-### 3b: Copy and adapt
+### 2b: Copy and adapt
 
 Copy the backend reference files into the equivalent locations in this app's backend. Adapt:
 
@@ -56,11 +58,11 @@ The key contract the frontend expects:
 - All dates are ISO 8601 strings
 - The `_serialize_doc` pattern (converting DB-native IDs to string `id` fields) must be replicated in whatever ORM/driver you use
 
-### 3c: Register the task board router
+### 2c: Register the task board router
 
 Register the task board router in the main app file at the `/api/taskboard` prefix.
 
-### 3d: Set up the database
+### 2d: Set up the database
 
 The task board needs 6 tables/collections: `taskboard_tasks`, `taskboard_comments`, `taskboard_activity`, `taskboard_user_reads`, `taskboard_notifications`, and `taskboard_projects`. See `backend-reference/README.md` for the full schema and recommended indexes.
 
@@ -68,24 +70,24 @@ If using a relational database (PostgreSQL, MySQL), create a migration with the 
 
 Run the seed script or manually create the initial project. Name the project based on what this app does.
 
-### 3e: Verify the backend
+### 2e: Verify the backend
 
 Start the backend and test the projects, columns, and tasks endpoints to make sure they return data correctly.
 
-## Step 4: Integrate the frontend
+## Step 3: Integrate the frontend
 
-### 4a: Import the CSS and configure Tailwind
+### 3a: Import the CSS and configure Tailwind
 
-Import `@ember-ai-formerly-snapdev/task-board/styles.css` in the app's global CSS or root layout.
+Import `@emberai-engg/task-board/styles.css` in the app's global CSS or root layout.
 
 **Critical for Tailwind v4:** Tailwind v4 skips `node_modules` by default, so the package's 300+ Tailwind utility classes won't be compiled. Check which version of Tailwind the app uses:
 
-- **Tailwind v4** (uses `@tailwindcss/postcss`, no `tailwind.config` file): Add a `@source` directive in the app's global CSS file pointing to the package's dist folder, e.g. `@source "../node_modules/@ember-ai-formerly-snapdev/task-board/dist";`
-- **Tailwind v3** (has `tailwind.config.js`/`tailwind.config.ts`): Add `"./node_modules/@ember-ai-formerly-snapdev/task-board/dist/**/*.{js,mjs}"` to the `content` array in the Tailwind config.
+- **Tailwind v4** (uses `@tailwindcss/postcss`, no `tailwind.config` file): Add a `@source` directive in the app's global CSS file pointing to the package's dist folder, e.g. `@source "../node_modules/@emberai-engg/task-board/dist";`
+- **Tailwind v3** (has `tailwind.config.js`/`tailwind.config.ts`): Add `"./node_modules/@emberai-engg/task-board/dist/**/*.{js,mjs}"` to the `content` array in the Tailwind config.
 
 Without this step, the board will render but all styling will be broken.
 
-### 4b: Create the task board page
+### 3b: Create the task board page
 
 Create a new page at `/task-board`. The page should:
 
@@ -101,11 +103,11 @@ If this app needs custom create/edit UI, render props (`renderCreateTask`, `rend
 
 Optionally, pass `onShareFeedback` callback to enable the Share Feedback button in the board header.
 
-### 4c: Add navigation link
+### 3c: Add navigation link
 
 Add a "Task Board" link to the app's sidebar or navigation using the `KanbanIcon` exported from the package. Match the existing nav pattern.
 
-## Step 5: Verify the integration
+## Step 4: Verify the integration
 
 Start both backend and frontend dev servers, navigate to `/task-board`, and verify:
 

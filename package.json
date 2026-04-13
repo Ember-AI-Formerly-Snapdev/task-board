@@ -1,5 +1,5 @@
 {
-  "name": "@ember-ai-formerly-snapdev/task-board",
+  "name": "@emberai-engg/task-board",
   "version": "0.3.0",
   "description": "Reusable Kanban task board component",
   "main": "./dist/index.js",
@@ -39,7 +39,8 @@
     "@types/react-dom": "^19.0.0"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
   "repository": {
     "type": "git",

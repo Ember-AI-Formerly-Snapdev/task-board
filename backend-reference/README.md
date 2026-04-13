@@ -1,6 +1,6 @@
 # Task Board Backend — Reference Implementation
 
-This is a **Python FastAPI + MongoDB** reference implementation for the `@ember-ai-formerly-snapdev/task-board` frontend package. It is not a runnable package — copy these files into your app's backend and adapt them.
+This is a **Python FastAPI + MongoDB** reference implementation for the `@emberai-engg/task-board` frontend package. It is not a runnable package — copy these files into your app's backend and adapt them.
 
 ## What to adapt
 
