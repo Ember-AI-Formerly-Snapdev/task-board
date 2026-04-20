@@ -47,11 +47,17 @@ export function formatDateTime(dateStr: string): string {
   });
 }
 
+/** Strip @[Name](username) mention markup to plain @Name for previews. */
+function stripMentionMarkup(text: string): string {
+  return text.replace(/@\[(.*?)\]\(.*?\)/g, "@$1");
+}
+
 export function getDescriptionPreview(desc: StructuredDescription | string | undefined): string {
   if (!desc) return "";
-  if (typeof desc === "string") return desc;
+  if (typeof desc === "string") return stripMentionMarkup(desc);
   for (const section of DESCRIPTION_SECTIONS) {
-    if (desc[section.key]?.trim()) return desc[section.key].trim();
+    const val = desc[section.key]?.trim();
+    if (val) return stripMentionMarkup(val);
   }
   return "";
 }
