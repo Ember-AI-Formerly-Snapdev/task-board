@@ -6,7 +6,7 @@ We've published a reusable Kanban task board package `@emberai-engg/task-board` 
 
 The package exports a `<TaskBoardProvider>` that accepts the app's API client and user info, and a `<TaskBoard>` component that renders the full board UI.
 
-The backend reference implementation (Python FastAPI + MongoDB) is in the same repo at `github.com/Ember-AI-Formerly-Snapdev/task-board` under the `backend-reference/` folder.
+The backend reference implementation (Python FastAPI + MongoDB) is in the same repo at `github.com/Ember-AI-Engineering/task-board` under the `backend-reference/` folder.
 
 ---
 
@@ -36,7 +36,7 @@ The package's frontend expects 16 REST API endpoints plus a projects endpoint. I
 
 ### 2a: Get the backend reference
 
-Clone or fetch the reference implementation from `https://github.com/Ember-AI-Formerly-Snapdev/task-board`. The backend code is in the `backend-reference/` folder. It contains:
+Clone or fetch the reference implementation from `https://github.com/Ember-AI-Engineering/task-board`. The backend code is in the `backend-reference/` folder. It contains:
 
 - `api/taskboard.py` — 16 REST endpoints
 - `models/taskboard.py` — Data models and constants
